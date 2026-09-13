@@ -8,6 +8,7 @@ const HOSTS = [
 	['example.com', true],
 	['192.0.2.10', false],
 	['2001:db8::1', false],
+	['0:0:0:0:0:ffff:192.0.2.10', false],
 ] as const
 
 describe('ClientHello server name', () => {

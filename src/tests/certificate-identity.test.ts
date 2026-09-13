@@ -32,6 +32,13 @@ describe('certificate IP identity verification', () => {
 		)
 	})
 
+	it('accepts expanded IPv6 with an embedded IPv4 component against an IP SAN', async() => {
+		await verifyFixture(
+			ipSanCertificate,
+			'2001:db8:0:0:0:0:0.0.0.1'
+		)
+	})
+
 	it('rejects a different IPv6 identity', async() => {
 		await assertHostRejected(ipSanCertificate, '2001:db8::2')
 	})
