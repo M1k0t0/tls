@@ -39,10 +39,22 @@ export function loadX509FromPem(
 			return getAlternativeNames(cert, 'ip')
 		},
 		isIssuer({ internal: ofCert }) {
-			var i = ofCert.issuer
-			var s = cert.subject
+			const issuerName = normalizeDistinguishedName(ofCert.issuerName)
+			const subjectName = normalizeDistinguishedName(cert.subjectName)
+			if(issuerName !== subjectName) {
+				return false
+			}
 
-			return i === s
+			const authorityKeyId = ofCert
+				.getExtension(peculiar.AuthorityKeyIdentifierExtension)
+				?.keyId
+			const subjectKeyId = cert
+				.getExtension(peculiar.SubjectKeyIdentifierExtension)
+				?.keyId
+
+			return !authorityKeyId
+				|| !subjectKeyId
+				|| authorityKeyId.toLowerCase() === subjectKeyId.toLowerCase()
 		},
 		getPublicKey() {
 			return {
@@ -81,6 +93,33 @@ function getAlternativeNames(
 	}
 
 	return []
+}
+
+function normalizeDistinguishedName(name: peculiar.Name) {
+	return JSON.stringify(
+		name.toJSON().map(rdn => (
+			Object.entries(rdn)
+				.flatMap(([type, values]) => values.map(value => [
+					type.toLowerCase(),
+					normalizeNameValue(value),
+				]))
+				.sort(([typeA, valueA], [typeB, valueB]) => {
+					if(typeA !== typeB) {
+						return typeA < typeB ? -1 : 1
+					}
+
+					return valueA === valueB ? 0 : valueA < valueB ? -1 : 1
+				})
+		))
+	)
+}
+
+function normalizeNameValue(value: string) {
+	return value
+		.normalize('NFKC')
+		.toLowerCase()
+		.trim()
+		.replace(/\s+/gu, ' ')
 }
 
 function getSigAlgorithm(
