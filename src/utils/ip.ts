@@ -37,7 +37,7 @@ function isDnsIdentity(value: string) {
 
 	const labels = value.split('.')
 	return !labels.every(label => (
-		/^(?:[+-]?(?:\d+|0x[0-9a-f]+))?$/i.test(label)
+		/^(?:[+-]?(?:\d+|0x[0-9a-f]*))?$/i.test(label)
 	))
 }
 
